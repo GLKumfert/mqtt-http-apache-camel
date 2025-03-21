@@ -17,6 +17,7 @@ public class MqttToHttpBridge {
                 System.out.println("Message received: " + exchange.getIn().getBody(String.class));
             })
             .log("Received MQTT Message: ${body}")
+            .setHeader("Content-Type", constant("text/plain"))
             .to("http://host.docker.internal:3000") //http send
             .process(exchange -> {
                 Long startTime = exchange.getProperty("startTime", Long.class);
@@ -38,8 +39,6 @@ public class MqttToHttpBridge {
             MqttToHttpBridge.class.wait();
         }
 
-        context.start();
-        System.out.println("MQTT to HTTP bridge is running...");
 
         // isnt looped, just slept for 10mins ish
         Thread.sleep(1000000);

@@ -7,6 +7,7 @@
   <version>1.0-SNAPSHOT</version>
   <name>mqtt-http-bridge</name>
   <url>http://maven.apache.org</url>
+  
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -19,19 +20,64 @@
         <artifactId>camel-core</artifactId>
         <version>4.0.0</version>
     </dependency>
-
-    <!-- MQTT Component for Camel (Paho MQTT 5) -->
     <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-paho-mqtt5</artifactId>
         <version>4.0.0</version>
     </dependency>
-
-    <!-- Apache Camel HTTP for making HTTP requests -->
     <dependency>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-http</artifactId>
         <version>4.0.0</version>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+              <mainClass>com.example.MqttToHttpBridge</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.2.4</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>com.example.MqttToHttpBridge</mainClass>
+                </transformer>
+              </transformers>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -10,25 +10,33 @@ public class MqttToHttpBridge {
         // Add the route that handles MQTT-to-HTTP conversion
         context.addRoutes(new RouteBuilder() {
             public void configure() {
-                from("paho-mqtt5:mytopic?brokerUrl=tcp://localhost:1883")
-                .process(exchange -> {
-                    long startTime = System.currentTimeMillis();
-                    exchange.setProperty("startTime", startTime);
-                    System.out.println("Message received: " + exchange.getIn().getBody(String.class));
-                })
-                .log("Received MQTT Message: ${body}")
-                .to("http://localhost:3000") //http send
-                .process(exchange -> {
-                    Long startTime = exchange.getProperty("startTime", Long.class);
-                    if (startTime != null) {
-                        long latency = System.currentTimeMillis() - startTime;
-                        System.out.println("Latency: " + latency + " ms");
-                    } else {
-                        System.out.println("Start time property is missing.");
-                    }
-                });
+            from("paho-mqtt5:mytopic?brokerUrl=tcp://host.docker.internal:1883")
+            .process(exchange -> {
+                long startTime = System.nanoTime();
+                exchange.setProperty("startTime", startTime);
+                System.out.println("Message received: " + exchange.getIn().getBody(String.class));
+            })
+            .log("Received MQTT Message: ${body}")
+            .to("http://host.docker.internal:3000") //http send
+            .process(exchange -> {
+                Long startTime = exchange.getProperty("startTime", Long.class);
+                if (startTime != null) {
+                Long latency = (System.nanoTime() - startTime)/1000;
+                System.out.println("Latency: " + latency + " µs");
+                } else {
+                System.out.println("Start time property is missing.");
+                }
+            });
             }
         });
+
+        context.start();
+        System.out.println("MQTT to HTTP bridge is running...");
+
+        // Keep the main thread alive to let Camel routes keep running
+        synchronized (MqttToHttpBridge.class) {
+            MqttToHttpBridge.class.wait();
+        }
 
         context.start();
         System.out.println("MQTT to HTTP bridge is running...");
